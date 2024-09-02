@@ -4,3 +4,4 @@ python-dotenv
 openai
 google-cloud-vision
 python-multipart
+pymongo
