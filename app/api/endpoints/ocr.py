@@ -1,22 +1,25 @@
-from fastapi import APIRouter, UploadFile, File, BackgroundTasks
-from app.core.openai_client import ask_openai
-from app.core.state import last_extracted_text
+from fastapi import APIRouter, UploadFile, File, Form
+from app.core.openai_client import update_conversation, get_conversation
 
 router = APIRouter()
 
-def send_to_chatbot(extracted_text: str):
-    global last_extracted_text
-    last_extracted_text = extracted_text
-    question = "What can you tell me about this text?"
-    openai_response = ask_openai(f"{extracted_text}\n\n{question}")
-    print("Chatbot response:", openai_response)
+def mock_ocr() -> str:
+    return "Elefantes sabem voar."
 
-@router.post("/process-image/")
-async def process_image(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
-    # Mocking the OCR extraction for now
-    extracted_text = "This is a mocked extracted and translated text."
+@router.post("/upload-image/")
+async def upload_image(session_id: str = Form(...), file: UploadFile = File(...)):
+    
+    extracted_text = mock_ocr()
 
-    # Send the extracted text to the chatbot in the background and store it
-    background_tasks.add_task(send_to_chatbot, extracted_text)
+    messages = get_conversation(session_id)
 
-    return {"message": "Mocked text sent to chatbot for testing."}
+    if not isinstance(messages, list):
+        raise ValueError("Messages should be a list, but got a dict.")
+
+    messages.append({"role": "system", "content": f"OCR text: {extracted_text}"})
+
+    # Update the conversation in MongoDB
+    update_conversation(session_id, messages)
+
+    # Respond with the updated conversation history
+    return {"message": "OCR text has been added to the conversation.", "session_id": session_id}

@@ -17,11 +17,15 @@ def update_conversation(session_id: str, messages: list):
 
 def ask_openai(session_id: str, prompt: str) -> str:
     messages = get_conversation(session_id)
+    
+    if isinstance(messages, dict): 
+        raise ValueError("Messages should be a list, but got a dict.")
+
     messages.append({"role": "user", "content": prompt})
     
     try:
         completion = openai.chat.completions.create(
-            model="gpt-3.5-turbo", 
+            model="gpt-3.5-turbo",  
             messages=messages,
         )
         response = completion.choices[0].message.content.strip()
@@ -30,3 +34,4 @@ def ask_openai(session_id: str, prompt: str) -> str:
         return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
