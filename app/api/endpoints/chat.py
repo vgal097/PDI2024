@@ -1,13 +1,9 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from app.models.ChatRequest import ChatRequest
 from uuid import uuid4
 from app.core.openai_client import ask_openai
 
 router = APIRouter()
-
-class ChatRequest(BaseModel):
-    session_id: str
-    message: str
 
 @router.post("/")
 async def chat_with_bot(request: ChatRequest):
