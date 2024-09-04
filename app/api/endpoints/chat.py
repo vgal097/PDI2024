@@ -3,6 +3,7 @@ from uuid import uuid4
 from app.core.openai_client import ask_openai
 from app.core.database import conversations_collection
 from app.models.ChatRequest import ChatRequest
+from fastapi.responses import StreamingResponse
 
 router = APIRouter()
 
@@ -13,11 +14,17 @@ async def start_session():
     conversations_collection.insert_one({"session_id": session_id, "messages": []})
     return {"session_id": session_id}
 
-# Chat with the bot
+# Chat with the bot (streaming response)
 @router.post("/")
 async def chat_with_bot(request: ChatRequest):
-    response = ask_openai(request.session_id, request.message)
-    return {"response": response}
+    print(f"Received message: {request.message}")  # Log the received message
+
+    # Stream the OpenAI response
+    def stream_response():
+        for chunk in ask_openai(request.session_id, request.message):
+            yield chunk
+
+    return StreamingResponse(stream_response(), media_type="text/plain")
 
 # Get all session IDs
 @router.get("/sessions")
