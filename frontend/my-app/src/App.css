@@ -52,26 +52,120 @@
   padding: 20px;
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
+  align-items: center; /* Center the chat window content horizontally */
+  max-width: 1200px; /* Increase the maximum width for a wider chat window */
+  margin: 0 auto; /* Center the chat window itself in the available space */
 }
 
 .messages {
+  display: flex;
+  flex-direction: column; /* Stack messages vertically */
+  gap: 10px; /* Add space between messages */
+  width: 100%; /* Ensure the messages container takes full width */
+  max-width: 1000px; /* Increase the max width for messages */
   flex-grow: 1;
-  overflow-y: auto;
-  padding-bottom: 10px;
+  overflow: auto; /* Allow vertical scrolling */
+  padding-bottom: 10px; /* Add some space at the bottom for better spacing */
+}
+
+.messages::-webkit-scrollbar {
+  display: none; /* Hide the scrollbar */
 }
 
 .message {
+  padding: 10px 15px;
+  border-radius: 20px;
+  max-width: 60%; /* Message bubbles will take up to 60% of the container width */
+  width: auto;
+  word-wrap: break-word;
+  font-size: 16px;
+  position: relative;
   margin-bottom: 10px;
-  color:white;
 }
+
 
 .message.user {
+  background-color: #007bff;
+  color: white;
+  align-self: flex-end; /* Align user messages to the right */
   text-align: right;
+  border-bottom-right-radius: 0;
 }
 
+.message.assistant {
+  background-color: #f1f1f1;
+  color: black;
+  align-self: flex-start; /* Align assistant messages to the left */
+  text-align: left;
+  border-bottom-left-radius: 0;
+}
+
+/* Add a little arrow effect to the user messages */
+.message.user::after {
+  content: '';
+  position: absolute;
+  right: -10px;
+  top: 10px;
+  border-width: 10px;
+  border-style: solid;
+  border-color: transparent transparent transparent #007bff;
+}
+
+/* Add a little arrow effect to the assistant messages */
+.message.assistant::after {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 10px;
+  border-width: 10px;
+  border-style: solid;
+  border-color: transparent #f1f1f1 transparent transparent;
+}
+
+/* Styling for code blocks */
+.message pre {
+  background-color: #2d2d2d; /* Dark background for code blocks */
+  color: #f8f8f2; /* Light text for readability */
+  padding: 15px; /* Increase padding for better spacing */
+  border-radius: 8px;
+  white-space: pre; /* Keep code in a single line until it hits the scrollbar */
+  font-family: 'Courier New', monospace; /* Monospace font for code */
+  overflow: auto; /* Enable both horizontal and vertical scrolling */
+  margin: 15px 0; /* Add more space around the code block */
+  max-width: 100%; /* Ensure the code block doesn't exceed the message width */
+  max-height: 300px; /* Limit the height of the code block */
+}
+
+/* Scrollbar styling for code blocks */
+.message pre::-webkit-scrollbar {
+  height: 8px;
+  background-color: #333; /* Scrollbar track color */
+}
+
+.message pre::-webkit-scrollbar-thumb {
+  background-color: #555; /* Scrollbar thumb color */
+  border-radius: 4px;
+}
+
+.message pre {
+  scrollbar-width: thin; /* Thin scrollbar for Firefox */
+  scrollbar-color: #555 #333; /* Custom scrollbar colors for Firefox */
+}
+
+.message code {
+  background-color: rgba(27, 31, 35, 0.05); /* Slightly different background for inline code */
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+}
+
+/* Input area styling */
 .input-area {
   display: flex;
   margin-top: 10px;
+  width: 100%;
+  max-width: 1000px; /* Increase input area to match wider message width */
 }
 
 .input-area input {

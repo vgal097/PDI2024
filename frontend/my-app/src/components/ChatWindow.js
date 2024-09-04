@@ -1,6 +1,7 @@
-// ChatWindow.js
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import ReactMarkdown from 'react-markdown'; // Import the markdown renderer
+import remarkGfm from 'remark-gfm'; // Import GitHub-flavored markdown (optional but recommended)
 
 const ChatWindow = ({ sessionId }) => {
     const [messages, setMessages] = useState([]);
@@ -20,7 +21,7 @@ const ChatWindow = ({ sessionId }) => {
 
     const sendMessage = () => {
         if (input.trim()) {
-            axios.post('http://localhost:8000/chat/', {
+            axios.post('http://localhost:8000/chat', {
                 session_id: sessionId,
                 message: input
             })
@@ -39,7 +40,10 @@ const ChatWindow = ({ sessionId }) => {
             <div className="messages">
                 {messages.map((msg, index) => (
                     <div key={index} className={`message ${msg.role}`}>
-                        <span>{msg.content}</span>
+                        {/* Use ReactMarkdown to render the message content */}
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {msg.content}
+                        </ReactMarkdown>
                     </div>
                 ))}
             </div>
