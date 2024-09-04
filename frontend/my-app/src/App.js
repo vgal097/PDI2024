@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import Sidebar from './components/Sidebar';  // Adjusted the path
-import ChatWindow from './components/ChatWindow';  // Adjusted the path
+import Sidebar from './components/Sidebar';
+import ChatWindow from './components/ChatWindow';
 import './App.css';
 
 const App = () => {
@@ -10,9 +10,13 @@ const App = () => {
         setSelectedSessionId(sessionId);
     };
 
+    const handleNewSession = (newSessionId) => {
+        setSelectedSessionId(newSessionId);
+    };
+
     return (
         <div className="app">
-            <Sidebar onSelectSession={handleSelectSession} />
+            <Sidebar onSelectSession={handleSelectSession} onNewSession={handleNewSession} />
             <ChatWindow sessionId={selectedSessionId} />
         </div>
     );
