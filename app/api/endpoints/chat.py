@@ -42,3 +42,11 @@ async def get_conversation(session_id: str):
     if conversation is None:
         raise HTTPException(status_code=404, detail="Session not found")
     return {"messages": conversation['messages']}
+
+# Delete conversation by session ID
+@router.delete("/conversations/{session_id}")
+async def delete_conversation(session_id: str):
+    result = conversations_collection.delete_one({"session_id": session_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return {"detail": "Conversation deleted"}

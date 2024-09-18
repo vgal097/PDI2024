@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { FaTrash } from 'react-icons/fa'; // Import a trash icon from react-icons
 
 const Sidebar = ({ onSelectSession, onNewSession }) => {
     const [sessions, setSessions] = useState([]);
@@ -30,14 +31,32 @@ const Sidebar = ({ onSelectSession, onNewSession }) => {
             });
     };
 
+    const handleDeleteSession = (session) => {
+        if (window.confirm("Are you sure you want to delete this conversation?")) {
+            axios.delete(`http://localhost:8000/chat/conversations/${session}`)
+                .then(response => {
+                    fetchSessions(); // Refresh the session list after deletion
+                })
+                .catch(error => {
+                    console.error('There was an error deleting the conversation!', error);
+                });
+        }
+    };
+
     return (
         <div className="sidebar">
             <h3>Conversations</h3>
             <button onClick={handleNewChat}>New Chat</button>
             <ul>
                 {sessions.map(session => (
-                    <li key={session} onClick={() => onSelectSession(session)}>
-                        {session}
+                    <li key={session}>
+                        <span onClick={() => onSelectSession(session)} style={{ cursor: 'pointer' }}>
+                            {session}
+                        </span>
+                        <FaTrash 
+                            style={{ cursor: 'pointer', marginLeft: '10px', color: 'red' }} 
+                            onClick={() => handleDeleteSession(session)} 
+                        />
                     </li>
                 ))}
             </ul>

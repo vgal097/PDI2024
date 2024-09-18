@@ -37,6 +37,9 @@
 }
 
 .sidebar ul li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 10px;
   margin-bottom: 5px;
   background-color: #e9e9e9;
@@ -45,6 +48,15 @@
 
 .sidebar ul li:hover {
   background-color: #d8d8d8;
+}
+
+.sidebar ul li span {
+  flex-grow: 1;
+}
+
+.sidebar ul li svg {
+  color: red;
+  cursor: pointer;
 }
 
 .chat-window {
