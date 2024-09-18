@@ -39,20 +39,25 @@ def ask_openai(session_id: str, prompt: str):
         for chunk in completion:
             # Log the received chunk for debugging
             print(f"Chunk received: {chunk}")
-            
-            # Check if there is content in the chunk and append it to assistant_message
-            if "content" in chunk.choices[0].delta:
-                content_chunk = chunk.choices[0].delta.content
+
+            # Extract content if available and append it to assistant_message['content']
+            delta = chunk.choices[0].delta
+            if hasattr(delta, "content") and delta.content is not None:  # Check if 'content' exists and is not None
+                content_chunk = delta.content
                 print(f"Received content chunk: {content_chunk}")
                 assistant_message['content'] += content_chunk
                 yield content_chunk  # Yield each chunk to the client in real-time
+            else:
+                print("No content or content is None in this chunk")
 
         # Once the stream is finished, save the full assistant response
-        messages.append(assistant_message)
-        print(f"Full assistant message after streaming: {assistant_message['content']}")  # Log the full message
-        update_conversation(session_id, messages)  # Save to the database
+        if assistant_message['content']:
+            print(f"Full assistant message after streaming: {assistant_message['content']}")  # Log the full message
+            messages.append(assistant_message)
+            update_conversation(session_id, messages)  # Save to the database
+        else:
+            print("No content to save after streaming")
 
     except Exception as e:
+        print(f"Error during OpenAI call: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
-
-

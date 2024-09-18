@@ -4,6 +4,7 @@ from app.core.openai_client import ask_openai
 from app.core.database import conversations_collection
 from app.models.ChatRequest import ChatRequest
 from fastapi.responses import StreamingResponse
+from fastapi.encoders import jsonable_encoder
 
 router = APIRouter()
 
@@ -20,9 +21,10 @@ async def chat_with_bot(request: ChatRequest):
     print(f"Received message: {request.message}")  # Log the received message
 
     # Stream the OpenAI response
-    def stream_response():
+    async def stream_response():
         for chunk in ask_openai(request.session_id, request.message):
-            yield chunk
+            print(f"Streaming chunk: {chunk}")  # Log the chunk for debugging
+            yield chunk.encode("utf-8")  # Ensure we're encoding the chunk properly
 
     return StreamingResponse(stream_response(), media_type="text/plain")
 

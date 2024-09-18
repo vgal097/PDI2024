@@ -22,17 +22,19 @@ const ChatWindow = ({ sessionId }) => {
     const handleStream = async (response) => {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
-        let assistantContent = ''; // Holds the streaming content
+        let assistantContent = '';
     
         try {
             while (true) {
                 const { done, value } = await reader.read();
-                if (done) break; // Exit the loop when the stream is complete
-                assistantContent += decoder.decode(value, { stream: true });
-                setStreamedMessage(assistantContent); // Update the streamed message in real-time
+                if (done) break;
+    
+                const chunk = decoder.decode(value, { stream: true });
+                console.log('Chunk received on front-end:', chunk);  // Log each chunk
+                assistantContent += chunk;
+                setStreamedMessage(assistantContent);
             }
     
-            // Once streaming is done, save the final assistant message
             setMessages((prevMessages) => [
                 ...prevMessages,
                 { role: 'assistant', content: assistantContent },
@@ -44,29 +46,31 @@ const ChatWindow = ({ sessionId }) => {
             setStreamedMessage('');
         }
     };
-
+    
+    
     const sendMessage = async () => {
         if (input.trim()) {
             // Add user message to the conversation
             setMessages([...messages, { role: 'user', content: input }]);
             setInput('');
-
+    
             setIsStreaming(true); // Indicate streaming is in progress
-
+    
             try {
                 // Make the POST request to stream the assistant's response
                 const response = await fetch('http://localhost:8000/chat', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'text/plain',  // Ensure streaming text is supported
                     },
                     body: JSON.stringify({ session_id: sessionId, message: input }),
                 });
-
+    
                 if (!response.ok) {
                     throw new Error(`Error sending message: ${response.statusText}`);
                 }
-
+    
                 // Stream the response
                 handleStream(response);
             } catch (error) {
@@ -75,7 +79,7 @@ const ChatWindow = ({ sessionId }) => {
             }
         }
     };
-
+    
     return (
         <div className="chat-window">
             <div className="messages">
