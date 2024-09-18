@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import ReactMarkdown from 'react-markdown'; // Import the markdown renderer
-import remarkGfm from 'remark-gfm'; // Import GitHub-flavored markdown (optional but recommended)
+import React, { useEffect, useState, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const ChatWindow = ({ sessionId }) => {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
-    const [isStreaming, setIsStreaming] = useState(false); // To handle streaming state
-    const [streamedMessage, setStreamedMessage] = useState(''); // For the message being streamed
+    const [isStreaming, setIsStreaming] = useState(false);
+    const [streamedMessage, setStreamedMessage] = useState('');
+    const fileInputRef = useRef(null);  // Use ref to reference the hidden file input
 
     useEffect(() => {
-        // Fetch previous conversations by sessionId
         if (sessionId) {
             fetch(`http://localhost:8000/chat/conversations/${sessionId}`)
                 .then((response) => response.json())
@@ -18,7 +18,6 @@ const ChatWindow = ({ sessionId }) => {
         }
     }, [sessionId]);
 
-    // Function to handle streaming responses
     const handleStream = async (response) => {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
@@ -30,7 +29,6 @@ const ChatWindow = ({ sessionId }) => {
                 if (done) break;
     
                 const chunk = decoder.decode(value, { stream: true });
-                console.log('Chunk received on front-end:', chunk);  // Log each chunk
                 assistantContent += chunk;
                 setStreamedMessage(assistantContent);
             }
@@ -47,22 +45,19 @@ const ChatWindow = ({ sessionId }) => {
         }
     };
     
-    
     const sendMessage = async () => {
         if (input.trim()) {
-            // Add user message to the conversation
             setMessages([...messages, { role: 'user', content: input }]);
             setInput('');
     
-            setIsStreaming(true); // Indicate streaming is in progress
+            setIsStreaming(true);
     
             try {
-                // Make the POST request to stream the assistant's response
                 const response = await fetch('http://localhost:8000/chat', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Accept': 'text/plain',  // Ensure streaming text is supported
+                        'Accept': 'text/plain',
                     },
                     body: JSON.stringify({ session_id: sessionId, message: input }),
                 });
@@ -71,28 +66,61 @@ const ChatWindow = ({ sessionId }) => {
                     throw new Error(`Error sending message: ${response.statusText}`);
                 }
     
-                // Stream the response
                 handleStream(response);
             } catch (error) {
                 console.error('Error sending message:', error);
-                setIsStreaming(false); // Reset the streaming state if there’s an error
+                setIsStreaming(false);
             }
+        }
+    };
+
+    // Trigger file selection when the button is clicked
+    const handleUploadButtonClick = () => {
+        fileInputRef.current.click();
+    };
+
+    const handleFileChange = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+    
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('session_id', sessionId);
+    
+        try {
+            const response = await fetch('http://localhost:8000/ocr/upload-image/', {
+                method: 'POST',
+                body: formData,
+            });
+    
+            if (response.ok) {
+                const data = await response.json();
+                setMessages((prevMessages) => [
+                    ...prevMessages,
+                    { role: 'assistant', content: `Extracted text: ${data.extracted_text}` }, // Modify this part
+                ]);
+            } else {
+                throw new Error('Error uploading image');
+            }
+        } catch (error) {
+            console.error('Error uploading image:', error);
         }
     };
     
     return (
         <div className="chat-window">
             <div className="messages">
-                {/* Render the conversation messages */}
-                {messages.map((msg, index) => (
-                    <div key={index} className={`message ${msg.role}`}>
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                            {msg.content}
-                        </ReactMarkdown>
-                    </div>
-                ))}
-
-                {/* Render the assistant's streamed message */}
+                {messages
+                    .filter(msg => msg.role !== 'system')  // Filter out system messages
+                    .map((msg, index) => (
+                        <div key={index} className={`message ${msg.role}`}>
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {msg.content}
+                            </ReactMarkdown>
+                        </div>
+                    ))
+                }
+    
                 {isStreaming && (
                     <div className="message assistant">
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -101,17 +129,25 @@ const ChatWindow = ({ sessionId }) => {
                     </div>
                 )}
             </div>
-
-            {/* Input field for user messages */}
+    
             <div className="input-area">
                 <input
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && !isStreaming && sendMessage()}
-                    disabled={isStreaming} // Disable input while streaming
+                    disabled={isStreaming}
                 />
                 <button onClick={sendMessage} disabled={isStreaming}>Send</button>
+    
+                {/* Hidden file input */}
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    style={{ display: 'none' }}
+                    onChange={handleFileChange}
+                />
+                <button onClick={handleUploadButtonClick}>Upload</button>
             </div>
         </div>
     );

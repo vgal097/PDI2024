@@ -96,7 +96,6 @@
   margin-bottom: 10px;
 }
 
-
 .message.user {
   background-color: #007bff;
   color: white;
@@ -177,7 +176,7 @@
   display: flex;
   margin-top: 10px;
   width: 100%;
-  max-width: 1000px; /* Increase input area to match wider message width */
+  max-width: 1000px;
 }
 
 .input-area input {
@@ -192,4 +191,5 @@
   cursor: pointer;
   background-color: #007bff;
   color: white;
+  margin-left: 10px;
 }

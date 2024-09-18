@@ -16,11 +16,32 @@ def update_conversation(session_id: str, messages: list):
     )
     print(f"Database update result: {result.modified_count} documents modified")  # Log database update
 
+def ensure_system_prompt(messages: list):
+    """Ensure that the system prompt is included at the start of the conversation."""
+    system_prompt = {
+        "role": "system",
+        "content": (
+            "You are a helpful chatbot that assists users in extracting text from images."
+            "and translating it. You interact with the users by answering their questions, "
+            "providing explanations, and translating text when they upload an image. You can translate "
+            "texts from various languages and help users understand the extracted text."
+            "They can upload an image by clicking the upload button that can be find below."
+            "Always answer with the same language as the user."
+        )
+    }
+
+    # Add the system prompt only if it's not already present
+    if not any(msg['role'] == 'system' for msg in messages):
+        messages.insert(0, system_prompt)
+
 def ask_openai(session_id: str, prompt: str):
     messages = get_conversation(session_id)
 
     if isinstance(messages, dict): 
         raise ValueError("Messages should be a list, but got a dict.")
+    
+    # Ensure the system prompt is present in the conversation
+    ensure_system_prompt(messages)
 
     # Add user prompt to messages
     messages.append({"role": "user", "content": prompt})
