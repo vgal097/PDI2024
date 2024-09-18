@@ -8,6 +8,16 @@ const ChatWindow = ({ sessionId }) => {
     const [isStreaming, setIsStreaming] = useState(false);
     const [streamedMessage, setStreamedMessage] = useState('');
     const fileInputRef = useRef(null);  // Use ref to reference the hidden file input
+    const messagesEndRef = useRef(null); // Use ref to auto-scroll
+
+    // Scroll to bottom when new message arrives
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages, isStreaming]); // Scroll when messages or streaming state changes
 
     useEffect(() => {
         if (sessionId) {
@@ -97,7 +107,7 @@ const ChatWindow = ({ sessionId }) => {
                 const data = await response.json();
                 setMessages((prevMessages) => [
                     ...prevMessages,
-                    { role: 'assistant', content: `Extracted text: ${data.extracted_text}` }, // Modify this part
+                    { role: 'assistant', content: `Extracted text: ${data.extracted_text}` },
                 ]);
             } else {
                 throw new Error('Error uploading image');
@@ -128,6 +138,8 @@ const ChatWindow = ({ sessionId }) => {
                         </ReactMarkdown>
                     </div>
                 )}
+                {/* This is the dummy div to auto-scroll to */}
+                <div ref={messagesEndRef} />
             </div>
     
             <div className="input-area">
